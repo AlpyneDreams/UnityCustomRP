@@ -168,6 +168,7 @@ Shader "Custom/Standard"
             Tags { "LightMode" = "Deferred" }
 
             HLSLPROGRAM
+            #include "Include/GBuffer.hlsl"
 
             struct Outputs {
                 float4 gbuffer0 : SV_Target0;
@@ -189,8 +190,9 @@ Shader "Custom/Standard"
                     AlphaClip(surface.alpha);
                 #endif
 
-                o.gbuffer0 = float4(surface.albedo, 1);
-                o.gbuffer1 = float4(surface.normal, 1);
+                GBuffer buffers = PackGBuffer(surface);
+                o.gbuffer0 = buffers.buf[0];
+                o.gbuffer1 = buffers.buf[1];
 
                 return o;
             }

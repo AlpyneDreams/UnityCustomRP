@@ -18,10 +18,11 @@ Varyings vertFullscreen(uint vertexID : SV_VertexID)
     o.position = GetFullScreenTriangleVertexPosition(vertexID);
     o.uv = GetFullScreenTriangleTexCoord(vertexID);
 
+    o.pos = o.position;
+
     // TODO: UNITY_UV_STARTS_AT_TOP?
     o.position.y *= -_ProjectionParams.x;
     
-    o.pos = o.position.xy;
 
     return o;
 }

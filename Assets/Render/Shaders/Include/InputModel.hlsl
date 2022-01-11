@@ -1,5 +1,5 @@
-#ifndef _COMMON_MODEL_HLSL
-#define _COMMON_MODEL_HLSL
+#ifndef _INPUT_MODEL_HLSL
+#define _INPUT_MODEL_HLSL
 
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 

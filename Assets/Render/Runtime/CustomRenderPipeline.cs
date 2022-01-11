@@ -22,6 +22,8 @@ namespace Render
         static ShaderTagId TagDeferred  = new ShaderTagId("Deferred");
         static ShaderTagId TagForward   = new ShaderTagId("Forward");
 
+        static int ID_MatrixInvVP = Shader.PropertyToID("unity_MatrixInvVP");
+
         RenderGraph renderGraph = new RenderGraph("CRP");
 
         RTHandle GBuffer0, GBuffer1, ZBuffer, LightBuffer;
@@ -77,6 +79,19 @@ namespace Render
 
                 // Update Camera Parameters
                 context.SetupCameraProperties(camera);
+
+                // Set inverse matrices
+                {
+                    Matrix4x4 V, P, IVP;
+                    V = camera.worldToCameraMatrix;
+                    P = GL.GetGPUProjectionMatrix(camera.projectionMatrix, true);
+
+                    IVP = Matrix4x4.Inverse(P * V);
+
+                    cmd.SetGlobalMatrix(ID_MatrixInvVP, IVP);
+                    context.ExecuteCommandBuffer(cmd);
+                    cmd.Clear();
+                }
 
                 // Update Lighting Parameters
                 Lighting.Setup(context, cullingResults);

@@ -22,28 +22,28 @@ Shader "Hidden/Custom/DirectionalLight"
             #include "../Include/InputCamera.hlsl"
             #include "../Include/Fullscreen.hlsl"
             #include "../Include/Lighting.hlsl"
+            #include "../Include/GBuffer.hlsl"
             #pragma vertex vertFullscreen
             #pragma fragment frag
 
+            // TODO: Are we correctly sampling these?
             sampler2D _AlbedoBuffer;
             sampler2D _NormalBuffer;
             sampler2D _DepthBuffer;
 
-            float4 frag(Varyings i) : SV_TARGET
+            float4 frag(Varyings i) : SV_Target
             {
-                Surface surface;
-                surface.albedo = tex2D(_AlbedoBuffer, i.uv);
-                surface.normal = tex2D(_NormalBuffer, i.uv);
+                GBuffer gbuf;
+                gbuf.buf[0] = tex2D(_AlbedoBuffer, i.uv);
+                gbuf.buf[1] = tex2D(_NormalBuffer, i.uv);
 
-                surface.alpha = 1;
-                surface.metallic = 0;
-                surface.gloss = 0;
+                Surface surface = UnpackGBuffer(gbuf);
 
-                // TODO: Get viewDirection (or worldPosition) here somehow.
-                // Reading from depth buffer is complicated but possible,
-                // inverse matrix projection may not be needed to get viewDirection?
-                // (i.e. because camera has known pos in view space)
-                surface.viewDirection = float3(1, 1, 1);
+                // Reconstruct worldPos from UV and depth
+                float depth     = tex2D(_DepthBuffer, i.uv).r;
+                float3 worldPos = ComputeWorldSpacePosition(i.uv, depth, UNITY_MATRIX_I_VP);
+
+                surface.viewDirection = normalize(_WorldSpaceCameraPos - worldPos);
 
                 return float4(Lighting(surface), 1);
             }
