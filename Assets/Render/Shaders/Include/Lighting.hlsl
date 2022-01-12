@@ -25,6 +25,8 @@ float3 Lighting(Surface surface)
         color += Lighting(surface, brdf, GetDirectionalLight(i));
     }
 
+    color += surface.emission;
+
     return color;
 }
 

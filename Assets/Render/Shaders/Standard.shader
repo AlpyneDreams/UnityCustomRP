@@ -23,6 +23,8 @@ Shader "Custom/Standard"
         _BumpScale("Scale", Float) = 1.0
         [Normal] [NoScaleOffset] _BumpMap("Normal Map", 2D) = "bump" {}
 
+        [NoScaleOffset] _EmissionMap    ("Emission", 2D)    = "white" {}
+		[HDR]           _EmissionColor  ("Emission", Color) = (0, 0, 0, 0)
     }
     SubShader
     {
@@ -41,11 +43,13 @@ Shader "Custom/Standard"
             TEXTURE2D(_BumpMap);
             SAMPLER(sampler_BumpMap);
 
+            TEXTURE2D(_EmissionMap);
             TEXTURE2D(_MaskMap);
             
             UNITY_INSTANCING_BUFFER_START(UnityPerMaterial)
                 UNITY_DEFINE_INSTANCED_PROP(float4, _MainTex_ST)
                 UNITY_DEFINE_INSTANCED_PROP(float4, _Color)
+                UNITY_DEFINE_INSTANCED_PROP(float4, _EmissionColor)
                 UNITY_DEFINE_INSTANCED_PROP(float, _Cutoff)
                 UNITY_DEFINE_INSTANCED_PROP(float, _Metallic)
                 UNITY_DEFINE_INSTANCED_PROP(float, _Glossiness)
@@ -120,6 +124,10 @@ Shader "Custom/Standard"
 
                 surface.normal   = worldNormal;
 
+                // Emission
+                float4 emissionMap   = SAMPLE_TEXTURE2D(_EmissionMap, sampler_MainTex, i.uv0);
+                float4 emissionColor = INPUT_PROP(_EmissionColor);
+                surface.emission     = emissionMap.rgb * emissionColor.rgb;
 
                 float4 mods      = SAMPLE_TEXTURE2D(_MaskMap, sampler_MainTex, i.uv0);
                 surface.metallic = mods.r * INPUT_PROP(_Metallic);

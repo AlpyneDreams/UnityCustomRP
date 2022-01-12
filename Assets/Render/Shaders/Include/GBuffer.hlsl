@@ -64,6 +64,9 @@ Surface UnpackGBuffer(GBuffer buffers)
     surface.metallic  = gm.y;
 
 
+    // TODO: Deferred emission
+    surface.emission  = 0;
+
     // Reconstruct worldPos from UV and depth
     surface.worldPos = ComputeWorldSpacePosition(buffers.uv, buffers.depth, UNITY_MATRIX_I_VP);
 
