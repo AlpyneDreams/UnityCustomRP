@@ -116,9 +116,9 @@ Shader "Custom/Standard"
                 // (visualize error with 'abs(length(worldNormal) - 1.0) * 10')
                 worldNormal = normalize(worldNormal);
 
-                surface.normal = worldNormal;
+                surface.normal   = worldNormal;
 
-                surface.viewDirection = normalize(_WorldSpaceCameraPos - i.worldPosition);
+                surface.worldPos = i.worldPosition;
 
                 surface.metallic = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Metallic);
                 surface.gloss    = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Smoothness);

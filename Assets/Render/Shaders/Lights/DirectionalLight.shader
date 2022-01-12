@@ -40,10 +40,8 @@ Shader "Hidden/Custom/DirectionalLight"
                 Surface surface = UnpackGBuffer(gbuf);
 
                 // Reconstruct worldPos from UV and depth
-                float depth     = tex2D(_DepthBuffer, i.uv).r;
-                float3 worldPos = ComputeWorldSpacePosition(i.uv, depth, UNITY_MATRIX_I_VP);
-
-                surface.viewDirection = normalize(_WorldSpaceCameraPos - worldPos);
+                float depth      = tex2D(_DepthBuffer, i.uv).r;
+                surface.worldPos = ComputeWorldSpacePosition(i.uv, depth, UNITY_MATRIX_I_VP);
 
                 return float4(Lighting(surface), 1);
             }

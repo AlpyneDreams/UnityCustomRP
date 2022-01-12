@@ -9,8 +9,7 @@ struct Surface {
     float metallic;
     float gloss;
 
-    // Not strictly part of the surface
-    float3 viewDirection;
+    float3 worldPos;
 };
 
 #endif

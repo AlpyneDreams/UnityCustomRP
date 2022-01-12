@@ -5,10 +5,13 @@
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
 
+#include "InputCamera.hlsl"
+
 struct BRDF {
     float3 diffuse;
     float3 specular;
-    float roughness;
+    float  roughness;
+    float3 viewDirection;
 };
 
 #define MIN_REFLECTIVITY 0.04
@@ -29,12 +32,14 @@ BRDF GetBRDF(Surface surface) {
     float perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(surface.gloss);
     brdf.roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
 
+    brdf.viewDirection = normalize(_WorldSpaceCameraPos - surface.worldPos);
+
     return brdf;
 }
 
 float Specular(Surface surface, BRDF brdf, Light light)
 {
-    float3 h = SafeNormalize(light.direction + surface.viewDirection);
+    float3 h  = SafeNormalize(light.direction + brdf.viewDirection);
 	float nh2 = square(saturate(dot(surface.normal, h)));
 	float lh2 = square(saturate(dot(light.direction, h)));
 	float r2  = square(brdf.roughness);
