@@ -1,5 +1,4 @@
-#ifndef _INPUT_MODEL_HLSL
-#define _INPUT_MODEL_HLSL
+#pragma once
 
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 
@@ -25,6 +24,3 @@ float4x4 unity_MatrixPreviousMI;
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
-
-
-#endif

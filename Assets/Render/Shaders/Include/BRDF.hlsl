@@ -1,5 +1,4 @@
-#ifndef _BRDF_HLSL
-#define _BRDF_HLSL
+#pragma once
 
 #include "Common.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
@@ -52,7 +51,3 @@ float3 DirectBRDF(Surface surface, BRDF brdf, Light light)
 {
     return Specular(surface, brdf, light) * brdf.specular + brdf.diffuse;
 }
-
-
-
-#endif

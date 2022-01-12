@@ -1,5 +1,4 @@
-#ifndef _LIGHT_HLSL
-#define _LIGHT_HLSL
+#pragma once
 
 #define MAX_DIRECTIONAL_LIGHTS 4
 
@@ -27,5 +26,3 @@ Light GetDirectionalLight(uint index)
 
     return light;
 }
-
-#endif

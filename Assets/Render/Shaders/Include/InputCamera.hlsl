@@ -1,5 +1,4 @@
-#ifndef _INPUT_CAMERA_HLSL
-#define _INPUT_CAMERA_HLSL
+#pragma once
 
 float3 _WorldSpaceCameraPos;
 
@@ -16,5 +15,3 @@ float4x4 glstate_matrix_projection;
 float4x4 unity_MatrixInvVP;
 
 #define UNITY_MATRIX_I_VP   unity_MatrixInvVP
-
-#endif

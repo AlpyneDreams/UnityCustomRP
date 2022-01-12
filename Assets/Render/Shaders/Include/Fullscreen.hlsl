@@ -1,5 +1,4 @@
-#ifndef _FULLSCREEN_HLSL
-#define _FULLSCREEN_HLSL
+#pragma once
 
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 
@@ -26,5 +25,3 @@ Varyings vertFullscreen(uint vertexID : SV_VertexID)
 
     return o;
 }
-
-#endif

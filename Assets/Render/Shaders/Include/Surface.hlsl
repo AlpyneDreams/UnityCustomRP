@@ -1,5 +1,4 @@
-#ifndef _SURFACE_HLSL
-#define _SURFACE_HLSL
+#pragma once
 
 struct Surface {
     float3 albedo;
@@ -12,5 +11,3 @@ struct Surface {
 
     float3 worldPos;
 };
-
-#endif

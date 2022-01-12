@@ -1,5 +1,4 @@
-#ifndef _LIGHTING_HLSL
-#define _LIGHTING_HLSL
+#pragma once
 
 #include "Surface.hlsl"
 #include "Light.hlsl"
@@ -29,5 +28,3 @@ float3 Lighting(Surface surface)
 
     return color;
 }
-
-#endif

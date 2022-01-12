@@ -1,5 +1,4 @@
-#ifndef _GBUFFER_HLSL
-#define _GBUFFER_HLSL
+#pragma once
 
 #include "Surface.hlsl"
 
@@ -72,5 +71,3 @@ Surface UnpackGBuffer(GBuffer buffers)
 
     return surface;
 }
-
-#endif
