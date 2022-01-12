@@ -19,7 +19,7 @@ Shader "Custom/Standard"
         [Gamma] _Metallic ("Metallic", Range(0, 1)) = 0
         //_MetallicGlossMap("Metallic", 2D) = "white" {}
 
-        _Smoothness ("Gloss", Range(0, 1)) = 0.5
+        _Glossiness ("Gloss", Range(0, 1)) = 0.5
 
         _BumpScale("Scale", Float) = 1.0
         [Normal] _BumpMap("Normal Map", 2D) = "bump" {}
@@ -48,7 +48,7 @@ Shader "Custom/Standard"
                 UNITY_DEFINE_INSTANCED_PROP(float4, _Color)
                 UNITY_DEFINE_INSTANCED_PROP(float, _Cutoff)
                 UNITY_DEFINE_INSTANCED_PROP(float, _Metallic)
-                UNITY_DEFINE_INSTANCED_PROP(float, _Smoothness)
+                UNITY_DEFINE_INSTANCED_PROP(float, _Glossiness)
             UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)
 
             struct Attributes {
@@ -121,7 +121,7 @@ Shader "Custom/Standard"
                 surface.worldPos = i.worldPosition;
 
                 surface.metallic = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Metallic);
-                surface.gloss    = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Smoothness);
+                surface.gloss    = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Glossiness);
 
                 return surface;
             }

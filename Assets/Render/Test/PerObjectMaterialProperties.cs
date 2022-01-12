@@ -5,7 +5,7 @@ public class PerObjectMaterialProperties : MonoBehaviour
 {
 	static int ID_Color		= Shader.PropertyToID("_Color");
 	static int ID_Metallic	= Shader.PropertyToID("_Metallic");
-	static int ID_Gloss		= Shader.PropertyToID("_Smoothness");
+	static int ID_Gloss		= Shader.PropertyToID("_Glossiness");
 
     static MaterialPropertyBlock block;
 	
