@@ -16,13 +16,12 @@ Shader "Custom/Standard"
         //_GlossMapScale("Smoothness Scale", Range(0.0, 1.0)) = 1.0
         //[Enum(Metallic Alpha,0,Albedo Alpha,1)] _SmoothnessTextureChannel ("Smoothness texture channel", Float) = 0
 
-        [Gamma] _Metallic ("Metallic", Range(0, 1)) = 0
-        //_MetallicGlossMap("Metallic", 2D) = "white" {}
-
+        [NoScaleOffset] _MaskMap ("Mask (Metal/AO/Detail/Gloss)", 2D) = "white" {}
+        _Metallic   ("Metallic", Range(0, 1)) = 0
         _Glossiness ("Gloss", Range(0, 1)) = 0.5
 
         _BumpScale("Scale", Float) = 1.0
-        [Normal] _BumpMap("Normal Map", 2D) = "bump" {}
+        [Normal] [NoScaleOffset] _BumpMap("Normal Map", 2D) = "bump" {}
 
     }
     SubShader
@@ -42,6 +41,7 @@ Shader "Custom/Standard"
             TEXTURE2D(_BumpMap);
             SAMPLER(sampler_BumpMap);
 
+            TEXTURE2D(_MaskMap);
             
             UNITY_INSTANCING_BUFFER_START(UnityPerMaterial)
                 UNITY_DEFINE_INSTANCED_PROP(float4, _MainTex_ST)
@@ -50,6 +50,8 @@ Shader "Custom/Standard"
                 UNITY_DEFINE_INSTANCED_PROP(float, _Metallic)
                 UNITY_DEFINE_INSTANCED_PROP(float, _Glossiness)
             UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)
+
+            #define INPUT_PROP(name) UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, name)
 
             struct Attributes {
                 float3 position : POSITION;
@@ -88,7 +90,7 @@ Shader "Custom/Standard"
                 o.tangentSpace[1]   = float3(wTangent.y, wBitangent.y, wNormal.y);
                 o.tangentSpace[2]   = float3(wTangent.z, wBitangent.z, wNormal.z);
 
-                float4 albedoTf = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _MainTex_ST);
+                float4 albedoTf = INPUT_PROP(_MainTex_ST);
                 o.uv0 = i.uv0 * albedoTf.xy + albedoTf.zw;
 
                 return o;
@@ -99,7 +101,7 @@ Shader "Custom/Standard"
                 Surface surface;
                 
                 float4 albedo = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv0);
-                float4 tint   = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Color);
+                float4 tint   = INPUT_PROP(_Color);
                 float4 base   = albedo * tint;
 
                 surface.albedo = base.rgb;
@@ -118,17 +120,19 @@ Shader "Custom/Standard"
 
                 surface.normal   = worldNormal;
 
-                surface.worldPos = i.worldPosition;
 
-                surface.metallic = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Metallic);
-                surface.gloss    = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Glossiness);
+                float4 mods      = SAMPLE_TEXTURE2D(_MaskMap, sampler_MainTex, i.uv0);
+                surface.metallic = mods.r * INPUT_PROP(_Metallic);
+                surface.gloss    = mods.a * INPUT_PROP(_Glossiness);
+
+                surface.worldPos = i.worldPosition;
 
                 return surface;
             }
 
             void AlphaClip(float alpha)
             {
-                clip(alpha - UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Cutoff));
+                clip(alpha - INPUT_PROP(_Cutoff));
             }
 
 
