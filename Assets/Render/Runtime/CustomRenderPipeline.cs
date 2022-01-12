@@ -43,13 +43,18 @@ namespace Render
             ZBuffer     = RTHandles.Alloc(Vector2.one, name: "DepthStencil", depthBufferBits: DepthBits.Depth32, dimension: TextureDimension.Tex2D);
             LightBuffer = RTHandles.Alloc(Vector2.one, name: "LightBuffer", dimension: TextureDimension.Tex2D);
 
-            DirectionalLight.SetTexture("_AlbedoBuffer", GBuffer0);
-            DirectionalLight.SetTexture("_NormalBuffer", GBuffer1);
-            DirectionalLight.SetTexture("_DepthBuffer",  ZBuffer);
+            InitFullscreenMaterial(DirectionalLight);
 
             //Debug.Log("GBuffer0: " + GBuffer0.rt.format);
 
             InitEditor();
+        }
+
+        void InitFullscreenMaterial(Material material)
+        {
+            material.SetTexture("_GBuffer0", GBuffer0);
+            material.SetTexture("_GBuffer1", GBuffer1);
+            material.SetTexture("_ZBuffer",  ZBuffer);
         }
 
         partial void InitEditor();

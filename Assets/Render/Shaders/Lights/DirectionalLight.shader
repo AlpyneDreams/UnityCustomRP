@@ -2,9 +2,9 @@ Shader "Hidden/Custom/DirectionalLight"
 {
     Properties
     {
-        _AlbedoBuffer ("", any) = "" {}
-        _NormalBuffer ("", any) = "" {}
-        _DepthBuffer ("", any) = "" {}
+        _GBuffer0 ("", any) = "" {}
+        _GBuffer1 ("", any) = "" {}
+        _ZBuffer ("", any) = "" {}
     }
     SubShader
     {
@@ -27,21 +27,15 @@ Shader "Hidden/Custom/DirectionalLight"
             #pragma fragment frag
 
             // TODO: Are we correctly sampling these?
-            sampler2D _AlbedoBuffer;
-            sampler2D _NormalBuffer;
-            sampler2D _DepthBuffer;
+            // TODO: Maybe move these samplers into GBuffer.hlsl to make SampleGBuffers simpler?
+            sampler2D _GBuffer0;
+            sampler2D _GBuffer1;
+            sampler2D _ZBuffer;
 
             float4 frag(Varyings i) : SV_Target
             {
-                GBuffer gbuf;
-                gbuf.buf[0] = tex2D(_AlbedoBuffer, i.uv);
-                gbuf.buf[1] = tex2D(_NormalBuffer, i.uv);
-
+                GBuffer gbuf = SampleGBuffers(i.uv, _GBuffer0, _GBuffer1, _ZBuffer);
                 Surface surface = UnpackGBuffer(gbuf);
-
-                // Reconstruct worldPos from UV and depth
-                float depth      = tex2D(_DepthBuffer, i.uv).r;
-                surface.worldPos = ComputeWorldSpacePosition(i.uv, depth, UNITY_MATRIX_I_VP);
 
                 return float4(Lighting(surface), 1);
             }
