@@ -17,18 +17,18 @@ namespace Render
     {
 #if UNITY_EDITOR
 
+        internal Material DebugMaterial = new Material(Shader.Find("Hidden/Custom/Debug"));
+
         partial void InitEditor()
         {
             SceneView.ClearUserDefinedCameraModes();
             SceneView.AddCameraMode("Albedo", "CRP");
             SceneView.AddCameraMode("Normal", "CRP");
-        }
+            SceneView.AddCameraMode("Gloss", "CRP");
+            SceneView.AddCameraMode("Metallic", "CRP");
 
-        RTHandle GetDebugBuffer(string cameraModeName) => cameraModeName switch {
-            "Albedo"    => GBuffer0,
-            "Normal"    => GBuffer1,
-            _           => null,
-        };
+            InitFullscreenMaterial(DebugMaterial);
+        }
 
         partial void DrawGizmos(RenderContext context)
         {
@@ -46,14 +46,13 @@ namespace Render
 
                 if (cameraMode.section != "CRP")
                     return;
-                
-                var buffer = GetDebugBuffer(cameraMode.name);
-                if (buffer == null) {
-                    return;
-                }
+
+                string keyword = "DEBUG_" + cameraMode.name.ToUpper();
 
                 var cmd = new CommandBuffer();
-                cmd.Blit(buffer, BuiltinRenderTextureType.CameraTarget);
+                cmd.EnableShaderKeyword(keyword);
+                CoreUtils.DrawFullScreen(cmd, DebugMaterial);
+                cmd.DisableShaderKeyword(keyword);
                 context.ExecuteCommandBuffer(cmd);
             }
         }
