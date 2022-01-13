@@ -12,6 +12,9 @@ CBUFFER_START(UnityPerDraw)
     real4   unity_WorldTransformParams;
 
     float4  unity_SpecCube0_HDR;
+    float4  unity_SpecCube0_ProbePosition;
+    float4  unity_SpecCube0_BoxMax;
+    float4  unity_SpecCube0_BoxMin;
 CBUFFER_END
 
 float4x4 unity_MatrixPreviousM;

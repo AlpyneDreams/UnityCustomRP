@@ -15,9 +15,36 @@ struct GI {
     float3 specular;
 };
 
+// From UnityStandardUtils in built-in shaders.
+inline float3 BoxProjectedCubemapDirection(float3 worldRefl, float3 worldPos, float4 cubemapCenter, float4 boxMin, float4 boxMax)
+{
+    // Do we have a valid reflection probe?
+    if (cubemapCenter.w > 0.0)
+    {
+        float3 nrdir = normalize(worldRefl);
+
+        float3 rbmax = (boxMax.xyz - worldPos) / nrdir;
+        float3 rbmin = (boxMin.xyz - worldPos) / nrdir;
+
+        float3 rbminmax = (nrdir > 0.0f) ? rbmax : rbmin;
+
+        float fa = min(min(rbminmax.x, rbminmax.y), rbminmax.z);
+
+        worldPos -= cubemapCenter.xyz;
+        worldRefl = worldPos + nrdir * fa;
+    }
+    return worldRefl;
+}
+
+
 float3 SampleEnvironment(Surface surface, BRDF brdf)
 {
     float3 uvw = reflect(-brdf.viewDirection, surface.normal);
+
+    uvw = BoxProjectedCubemapDirection(
+        uvw, surface.position, unity_SpecCube0_ProbePosition,
+        unity_SpecCube0_BoxMin, unity_SpecCube0_BoxMax
+    );
 
     // Choose mip based on roughness, to apply blur
     float mip = PerceptualRoughnessToMipmapLevel(brdf.perceptualRoughness);
