@@ -16,8 +16,8 @@ namespace Render
         public CustomRenderPipelineAsset settings;
 
         // Current render context
-        Camera          camera;
-        CullingResults  cullingResults;
+        public Camera          camera;
+        public CullingResults  cullingResults;
 
         static ShaderTagId TagDeferred  = new ShaderTagId("Deferred");
         static ShaderTagId TagForward   = new ShaderTagId("Forward");
@@ -28,9 +28,11 @@ namespace Render
 
         RTHandle GBuffer0, GBuffer1, ZBuffer, LightBuffer;
 
-        Material DeferredShading = new Material(Shader.Find("Hidden/Custom/DeferredShading"));
+        public Material DeferredShading = new Material(Shader.Find("Hidden/Custom/DeferredShading"));
+        public Material PointLight      = new Material(Shader.Find("Hidden/Custom/PointLight"));
 
         Lighting lighting = new Lighting();
+        DeferredLights lights = new DeferredLights();
 
         public CustomRenderPipeline(CustomRenderPipelineAsset asset)
         {
@@ -49,6 +51,7 @@ namespace Render
             LightBuffer = RTHandles.Alloc(Vector2.one, name: "LightBuffer", dimension: TextureDimension.Tex2D, colorFormat: GraphicsFormat.R32G32B32A32_SFloat);
 
             InitFullscreenMaterial(DeferredShading);
+            InitFullscreenMaterial(PointLight);
 
             //Debug.Log("GBuffer0: " + GBuffer0.rt.format);
 
@@ -92,7 +95,7 @@ namespace Render
                 context.ExecuteAndClear(cmd);
 
                 // Update Lighting Parameters
-                lighting.Setup(this, context, cullingResults);
+                lighting.Setup(this, context);
 
                 // Render Shadowmaps
                 lighting.shadows.Render();
@@ -156,7 +159,9 @@ namespace Render
         }
 
         void RenderDeferred(RenderContext context, CommandBuffer cmd)
-        {            
+        {
+            lights.Setup(this, context);
+
             var renderGraphParams = new RenderGraphParameters()
             {
                 scriptableRenderContext = context,
@@ -213,6 +218,9 @@ namespace Render
 
             // Draw Directional Lights
             CoreUtils.DrawFullScreen(cmd, DeferredShading);
+
+            // Draw Local Lights
+            lights.Render(cmd);
 
             cmd.SetRenderTarget(LightBuffer, ZBuffer);
 

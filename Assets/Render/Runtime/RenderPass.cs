@@ -16,6 +16,7 @@ namespace Render
         protected CustomRenderPipelineAsset settings;
         protected RenderContext context;
         protected CullingResults cullingResults;
+        protected Camera camera;
 
         protected CommandBuffer cmd;
 
@@ -35,20 +36,28 @@ namespace Render
             this.settings = parent.settings;
             this.context = parent.context;
             this.cullingResults = parent.cullingResults;
+            this.camera = parent.camera;
             Setup();
         }
 
-        public void Setup(CustomRenderPipeline pipeline, RenderContext context, CullingResults cullingResults)
+        public void Setup(CustomRenderPipeline pipeline, RenderContext context)
         {
             this.pipeline = pipeline;
             this.settings = pipeline.settings;
             this.context = context;
-            this.cullingResults = cullingResults;
+            this.cullingResults = pipeline.cullingResults;
+            this.camera = pipeline.camera;
             Setup();
         }
 
-        protected abstract void Setup();
-        public abstract void Render();
-        public abstract void Cleanup();
+        public void Render(CommandBuffer cmd)
+        {
+            this.cmd = cmd;
+            Render();
+        }
+
+        protected virtual void Setup() {}
+        public virtual void Render() {}
+        public virtual void Cleanup() {}
     }
 }

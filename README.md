@@ -12,9 +12,13 @@
 
 ### Deferred
 - Emission
-
+- Lights
+    - Point light instancing
+    - Spot lights
+    - All other light shapes
 
 ### Other
 - Material Fresnel Scale Slider
 - [Premultiplied Alpha](https://catlikecoding.com/unity/tutorials/custom-srp/directional-lights/#4) 
 - GBuffers should be size of target backbuffer, not size of monitor
+- Indirect reflections are too prominent in the dark
