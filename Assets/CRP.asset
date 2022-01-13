@@ -9,9 +9,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0c714125ee96abb49b2ed123c4313494, type: 3}
+  m_Script: {fileID: 11500000, guid: 22b1fc6b70843114982e1c37777805ef, type: 3}
   m_Name: CRP
   m_EditorClassIdentifier: 
   useDynamicBatching: 0
   useGPUInstancing: 1
   useSRPBatcher: 1
+  shadows:
+    maxDistance: 100
+    distanceFade: 0.1
+    directional:
+      atlasSize: 2048
+      filter: 3
+      cascadeCount: 4
+      cascadeRatios:
+      - 0.1
+      - 0.25
+      - 0.5
+      cascadeFade: 0.1

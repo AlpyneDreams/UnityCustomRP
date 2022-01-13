@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Surface.hlsl"
+#include "InputModel.hlsl"
 
 // Buffer 0 has 8 bits/channel, buffer 1 has 32 bits/channel 
 
@@ -66,8 +67,9 @@ Surface UnpackGBuffer(GBuffer buffers)
     // TODO: Deferred emission
     surface.emission  = 0;
 
-    // Reconstruct worldPos from UV and depth
-    surface.worldPos = ComputeWorldSpacePosition(buffers.uv, buffers.depth, UNITY_MATRIX_I_VP);
+    // Reconstruct world position from UV and depth
+    surface.position = ComputeWorldSpacePosition(buffers.uv, buffers.depth, UNITY_MATRIX_I_VP);
+    surface.depth    = -TransformWorldToView(surface.position).z; // FIXME: Could use UNITY_MATRIX_I_P on clip space pos
 
     return surface;
 }

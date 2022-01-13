@@ -13,7 +13,7 @@ namespace Render
 {
     public partial class CustomRenderPipeline : RenderPipeline
     {
-        CustomRenderPipelineAsset settings;
+        public CustomRenderPipelineAsset settings;
 
         // Current render context
         Camera          camera;
@@ -30,13 +30,18 @@ namespace Render
 
         Material DirectionalLight = new Material(Shader.Find("Hidden/Custom/DirectionalLight"));
 
+        Lighting lighting = new Lighting();
+
         public CustomRenderPipeline(CustomRenderPipelineAsset asset)
         {
             this.settings = asset;
             GraphicsSettings.useScriptableRenderPipelineBatching = settings.useSRPBatcher;
 
-            RTHandles.Initialize(Screen.width, Screen.height);
-            RTHandles.SetReferenceSize(Screen.width, Screen.height);
+            // This is the total monitor resolution. Don't use Screen.width / Screen.height, they're unreliable.
+            var (width, height) = (Screen.currentResolution.width, Screen.currentResolution.height);
+
+            RTHandles.Initialize(width, height);
+            RTHandles.SetReferenceSize(width, height);
 
             GBuffer0    = RTHandles.Alloc(Vector2.one, name: "GBuffer0", dimension: TextureDimension.Tex2D);
             GBuffer1    = RTHandles.Alloc(Vector2.one, name: "GBuffer1", dimension: TextureDimension.Tex2D, colorFormat: GraphicsFormat.R32G32B32A32_SFloat);
@@ -57,6 +62,7 @@ namespace Render
             material.SetTexture("_ZBuffer",  ZBuffer);
         }
 
+        // Editor-Only Methods
         partial void InitEditor();
         partial void DrawGizmos(RenderContext context);
         partial void DrawDebug(RenderContext context);
@@ -77,10 +83,23 @@ namespace Render
                 // Culling
                 if (!camera.TryGetCullingParameters(out var cullParams))
                     return;
+                cullParams.shadowDistance = Mathf.Min(settings.shadows.maxDistance, camera.farClipPlane);
                 cullingResults = context.Cull(ref cullParams);
 
-
                 var cmd = new CommandBuffer {name = camera.name};
+
+                cmd.BeginSample(camera.name);
+                context.ExecuteAndClear(cmd);
+
+                // Update Lighting Parameters
+                lighting.Setup(this, context, cullingResults);
+
+                // Render Shadowmaps
+                lighting.shadows.Render();
+
+                cmd.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
+                cmd.EndSample(camera.name);
+                context.ExecuteAndClear(cmd);
 
                 // Update Camera Parameters
                 context.SetupCameraProperties(camera);
@@ -94,14 +113,11 @@ namespace Render
                     IVP = Matrix4x4.Inverse(P * V);
 
                     cmd.SetGlobalMatrix(ID_MatrixInvVP, IVP);
-                    context.ExecuteCommandBuffer(cmd);
-                    cmd.Clear();
+                    context.ExecuteAndClear(cmd);
                 }
 
-                // Update Lighting Parameters
-                Lighting.Setup(context, cullingResults);
-
                 switch (camera.renderingPath) {
+                    default:
                     case RenderingPath.Forward:
                         RenderForward(context, cmd);
                         break;
@@ -112,6 +128,8 @@ namespace Render
 
                 DrawGizmos(context);
 
+                lighting.Cleanup();
+
                 context.Submit();
                 cmd.Release();
             }
@@ -120,8 +138,8 @@ namespace Render
         void RenderForward(RenderContext context, CommandBuffer cmd)
         {
             cmd.BeginSample(camera.name);
-            context.ExecuteCommandBuffer(cmd);
-            cmd.Clear();
+            cmd.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
+            context.ExecuteAndClear(cmd);
 
             // Draw Opaque
             DrawOpaque(context, TagForward);
@@ -133,12 +151,11 @@ namespace Render
             DrawTransparent(context, TagForward);
 
             cmd.EndSample(camera.name);
-            context.ExecuteCommandBuffer(cmd);
-            cmd.Clear();
+            context.ExecuteAndClear(cmd);
         }
 
         void RenderDeferred(RenderContext context, CommandBuffer cmd)
-        {
+        {            
             var renderGraphParams = new RenderGraphParameters()
             {
                 scriptableRenderContext = context,
@@ -166,8 +183,7 @@ namespace Render
                     (PassData data, RenderGraphContext ctx) => 
                     {
                         ctx.cmd.ClearRenderTarget(true, true, new Color(0, 0, 0, 0));
-                        ctx.renderContext.ExecuteCommandBuffer(ctx.cmd);
-                        ctx.cmd.Clear();
+                        ctx.renderContext.ExecuteAndClear(ctx.cmd);
 
                         DrawOpaque(ctx.renderContext, TagDeferred);
                     });
@@ -200,8 +216,7 @@ namespace Render
             cmd.SetRenderTarget(LightBuffer, ZBuffer);
 
             cmd.BeginSample(camera.name);
-            context.ExecuteCommandBuffer(cmd);
-            cmd.Clear();
+            context.ExecuteAndClear(cmd);
 
             // Skybox
             DrawSkybox(context);
@@ -214,8 +229,7 @@ namespace Render
             // Blit to backbuffer
             cmd.Blit(LightBuffer, BuiltinRenderTextureType.CameraTarget);
 
-            context.ExecuteCommandBuffer(cmd);
-            cmd.Clear();
+            context.ExecuteAndClear(cmd);
 
             // Editor Scene View Draw Modes
             DrawDebug(context);
@@ -258,6 +272,8 @@ namespace Render
 
             GBuffer0.Release();
             GBuffer1.Release();
+            ZBuffer.Release();
+            LightBuffer.Release();
             
             renderGraph.Cleanup();
             renderGraph = null;

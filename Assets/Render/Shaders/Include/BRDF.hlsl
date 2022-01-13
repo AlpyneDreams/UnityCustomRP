@@ -31,7 +31,7 @@ BRDF GetBRDF(Surface surface) {
     float perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(surface.gloss);
     brdf.roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
 
-    brdf.viewDirection = normalize(_WorldSpaceCameraPos - surface.worldPos);
+    brdf.viewDirection = normalize(_WorldSpaceCameraPos - surface.position);
 
     return brdf;
 }
