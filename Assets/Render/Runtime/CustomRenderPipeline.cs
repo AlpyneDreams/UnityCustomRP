@@ -98,6 +98,8 @@ namespace Render
                 lighting.shadows.Render();
 
                 cmd.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
+                cmd.ClearRenderTarget(camera.clearFlags, camera.backgroundColor);
+                
                 cmd.EndSample(camera.name);
                 context.ExecuteAndClear(cmd);
 
@@ -138,7 +140,6 @@ namespace Render
         void RenderForward(RenderContext context, CommandBuffer cmd)
         {
             cmd.BeginSample(camera.name);
-            cmd.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
             context.ExecuteAndClear(cmd);
 
             // Draw Opaque
@@ -182,7 +183,7 @@ namespace Render
                     builder.SetRenderFunc(
                     (PassData data, RenderGraphContext ctx) => 
                     {
-                        ctx.cmd.ClearRenderTarget(true, true, new Color(0, 0, 0, 0));
+                        ctx.cmd.ClearRenderTarget(true, true, Color.clear);
                         ctx.renderContext.ExecuteAndClear(ctx.cmd);
 
                         DrawOpaque(ctx.renderContext, TagDeferred);
@@ -259,7 +260,8 @@ namespace Render
             var sortingSettings = new SortingSettings(camera) { criteria = criteria };
             var drawingSettings = new DrawingSettings(tagID, sortingSettings) {
                     enableDynamicBatching = settings.useDynamicBatching,
-                    enableInstancing      = settings.useGPUInstancing
+                    enableInstancing      = settings.useGPUInstancing,
+                    perObjectData         = PerObjectData.ReflectionProbes
             };
             var filteringSettings = new FilteringSettings(range);
 

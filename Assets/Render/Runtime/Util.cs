@@ -28,6 +28,16 @@ namespace Render
                 cmd.DisableShaderKeyword(keyword);        
         }
 
+        // Clear the current render target based on Camera settings
+        public static void ClearRenderTarget(this CommandBuffer cmd, CameraClearFlags flags, Color color)
+        {
+            cmd.ClearRenderTarget(
+                flags <= CameraClearFlags.Depth,
+                flags <= CameraClearFlags.Color,
+                flags == CameraClearFlags.Color ? color.linear : Color.clear
+            );
+        }
+
         // Usage: foreach (var (index, item) in collection.Entries())
         public static IEnumerable<(int, T)> Entries<T>(this IEnumerable<T> src)
             => src.Select((item, index) => (index, item));

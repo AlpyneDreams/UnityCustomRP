@@ -10,6 +10,8 @@ CBUFFER_START(UnityPerDraw)
 
     float4  unity_LODFade;
     real4   unity_WorldTransformParams;
+
+    float4  unity_SpecCube0_HDR;
 CBUFFER_END
 
 float4x4 unity_MatrixPreviousM;
