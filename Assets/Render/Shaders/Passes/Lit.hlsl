@@ -19,6 +19,7 @@ UNITY_INSTANCING_BUFFER_START(UnityPerMaterial)
     UNITY_DEFINE_INSTANCED_PROP(float4, _Color)
     UNITY_DEFINE_INSTANCED_PROP(float4, _EmissionColor)
     UNITY_DEFINE_INSTANCED_PROP(float, _Cutoff)
+    UNITY_DEFINE_INSTANCED_PROP(float, _BumpScale)
     UNITY_DEFINE_INSTANCED_PROP(float, _Metallic)
     UNITY_DEFINE_INSTANCED_PROP(float, _Glossiness)
 UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)
@@ -80,7 +81,7 @@ Surface GetSurface(Varyings i)
     surface.alpha  = base.a;
 
     // Compute worldNormal
-    float3 tNormal = UnpackNormal(SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, i.uv0));
+    float3 tNormal = UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, i.uv0), INPUT_PROP(_BumpScale));
     float3 worldNormal;
     worldNormal.x = dot(i.tangentSpace[0], tNormal);
     worldNormal.y = dot(i.tangentSpace[1], tNormal);

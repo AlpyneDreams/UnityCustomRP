@@ -12,6 +12,9 @@ Shader "Custom/Standard"
         _Cutoff ("Alpha Cutoff", Range(0.0, 1.0)) = 0.5
 		[Toggle(_CLIPPING)] _Clipping ("Alpha Clipping", Float) = 0
 
+        [Normal] [NoScaleOffset] _BumpMap("Normal Map", 2D) = "bump" {}
+        _BumpScale("Normal Scale", Float) = 1.0
+
         //_Glossiness("Smoothness", Range(0.0, 1.0)) = 0.5
         //_GlossMapScale("Smoothness Scale", Range(0.0, 1.0)) = 1.0
         //[Enum(Metallic Alpha,0,Albedo Alpha,1)] _SmoothnessTextureChannel ("Smoothness texture channel", Float) = 0
@@ -19,9 +22,6 @@ Shader "Custom/Standard"
         [NoScaleOffset] _MaskMap ("Mask (Metal/AO/Detail/Gloss)", 2D) = "white" {}
         _Metallic   ("Metallic", Range(0, 1)) = 0
         _Glossiness ("Gloss", Range(0, 1)) = 0.5
-
-        _BumpScale("Scale", Float) = 1.0
-        [Normal] [NoScaleOffset] _BumpMap("Normal Map", 2D) = "bump" {}
 
         [NoScaleOffset] _EmissionMap    ("Emission", 2D)    = "white" {}
 		[HDR]           _EmissionColor  ("Emission", Color) = (0, 0, 0, 0)
