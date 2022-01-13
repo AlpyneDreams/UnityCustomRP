@@ -70,7 +70,7 @@ Shader "Hidden/Custom/PointLight"
                 float rangeAtten = square(saturate(1 - square(distSq * _LightColor.a)));
                 light.attenuation = rangeAtten / distSq;
                 
-                return float4(Lighting(surface, brdf, light), 1);
+                return float4(DirectLight(surface, brdf, light), 1);
             }
 
             ENDHLSL

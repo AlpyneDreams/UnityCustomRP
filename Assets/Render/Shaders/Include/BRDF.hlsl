@@ -51,19 +51,25 @@ float Specular(Surface surface, BRDF brdf, Light light)
 	return r2 / (d2 * max(0.1, lh2) * normalization);
 }
 
-float3 DirectBRDF(Surface surface, BRDF brdf, Light light)
+// Schlick's Approximation Simplified
+float Fresnel(Surface surface, BRDF brdf)
 {
-    return Specular(surface, brdf, light) * brdf.specular + brdf.diffuse;
+    float3 N = surface.normal;
+    float3 V = brdf.viewDirection;
+
+    // (f90 - f0) * pow(1 - saturate(dot(N, V))) + f0
+    // We assume f0 = 0, f90 = 1, and use 4th power instead of 5th
+    
+    return Pow4(1 - saturate(dot(N, V)));
 }
 
-float3 IndirectBRDF(Surface surface, BRDF brdf, float3 diffuse, float3 specular)
+float3 IndirectLight(Surface surface, BRDF brdf, float3 diffuse, float3 specular)
 {
-    float3 fresnel = Pow4(1 - saturate(dot(surface.normal, brdf.viewDirection)));
-    
+    float3 fresnel    = Fresnel(surface, brdf);
     float3 reflection = specular * lerp(brdf.specular, brdf.fresnel, fresnel);
-
+    
     // Roughness scatters the reflection
-    reflection /= brdf.roughness * brdf.roughness + 1;
+    reflection /= square(brdf.roughness) + 1;
 
-    return brdf.diffuse * diffuse + reflection;
+    return (brdf.diffuse * diffuse) + reflection;
 }

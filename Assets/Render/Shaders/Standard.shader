@@ -97,7 +97,7 @@ Shader "Custom/Standard"
                 // Output environment reflections and emission to LBuffer
                 BRDF brdf = GetBRDF(surface);
                 GI gi = GetGI(surface, brdf);
-                float3 lighting = IndirectBRDF(surface, brdf, gi.diffuse, gi.specular);
+                float3 lighting = IndirectLight(surface, brdf, gi.diffuse, gi.specular);
                 lighting += surface.emission;
 
                 o.lighting = float4(lighting, 1);
