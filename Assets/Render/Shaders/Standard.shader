@@ -67,12 +67,14 @@ Shader "Custom/Standard"
             #pragma exclude_renderers nomrt
             #include_with_pragmas "Passes/Lit.hlsl"
             #include "Include/GBuffer.hlsl"
+            #include "Include/Lighting.hlsl"
 
             #pragma fragment frag
 
             struct Outputs {
                 float4 gbuffer0 : SV_Target0;
                 float4 gbuffer1 : SV_Target1;
+                float4 lighting : SV_Target2;
                 //float  depth    : SV_Depth;
             };
 
@@ -91,6 +93,14 @@ Shader "Custom/Standard"
                 GBuffer buffers = PackGBuffer(surface);
                 o.gbuffer0 = buffers.buf[0];
                 o.gbuffer1 = buffers.buf[1];
+
+                // Output environment reflections and emission to LBuffer
+                BRDF brdf = GetBRDF(surface);
+                GI gi = GetGI(surface, brdf);
+                float3 lighting = IndirectBRDF(surface, brdf, gi.diffuse, gi.specular);
+                lighting += surface.emission;
+
+                o.lighting = float4(lighting, 1);
 
                 return o;
             }

@@ -58,6 +58,10 @@ GI GetGI(Surface surface, BRDF brdf)
 {
     GI gi;
     gi.diffuse = 0;
+#if GI_NO_SPECULAR
+    gi.specular = 0;
+#else
     gi.specular = SampleEnvironment(surface, brdf);
+#endif
     return gi;
 }

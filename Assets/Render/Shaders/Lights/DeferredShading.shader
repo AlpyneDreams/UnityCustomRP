@@ -1,4 +1,4 @@
-Shader "Hidden/Custom/DirectionalLight"
+Shader "Hidden/Custom/DeferredShading"
 {
     Properties
     {
@@ -13,12 +13,13 @@ Shader "Hidden/Custom/DirectionalLight"
         
         Pass
         {
-            //Blend DstColor Zero // Multiply
+            Blend One One // Additive
             ZWrite Off
             ZTest Off
-            Tags { "LightMode" = "Deferred" }
 
             HLSLPROGRAM
+            #define GI_NO_SPECULAR 1
+
             #include "../Include/InputCamera.hlsl"
             #include "../Include/Fullscreen.hlsl"
             #include "../Include/Lighting.hlsl"

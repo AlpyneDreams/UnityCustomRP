@@ -28,7 +28,7 @@ namespace Render
 
         RTHandle GBuffer0, GBuffer1, ZBuffer, LightBuffer;
 
-        Material DirectionalLight = new Material(Shader.Find("Hidden/Custom/DirectionalLight"));
+        Material DeferredShading = new Material(Shader.Find("Hidden/Custom/DeferredShading"));
 
         Lighting lighting = new Lighting();
 
@@ -46,9 +46,9 @@ namespace Render
             GBuffer0    = RTHandles.Alloc(Vector2.one, name: "GBuffer0", dimension: TextureDimension.Tex2D);
             GBuffer1    = RTHandles.Alloc(Vector2.one, name: "GBuffer1", dimension: TextureDimension.Tex2D, colorFormat: GraphicsFormat.R32G32B32A32_SFloat);
             ZBuffer     = RTHandles.Alloc(Vector2.one, name: "DepthStencil", depthBufferBits: DepthBits.Depth32, dimension: TextureDimension.Tex2D);
-            LightBuffer = RTHandles.Alloc(Vector2.one, name: "LightBuffer", dimension: TextureDimension.Tex2D);
+            LightBuffer = RTHandles.Alloc(Vector2.one, name: "LightBuffer", dimension: TextureDimension.Tex2D, colorFormat: GraphicsFormat.R32G32B32A32_SFloat);
 
-            InitFullscreenMaterial(DirectionalLight);
+            InitFullscreenMaterial(DeferredShading);
 
             //Debug.Log("GBuffer0: " + GBuffer0.rt.format);
 
@@ -69,7 +69,7 @@ namespace Render
 
         class PassData
         {
-            public TextureHandle output, gbuffer0, gbuffer1;
+            public TextureHandle output, gbuffer0, gbuffer1, lighting;
             public Material material;
         }
         
@@ -171,6 +171,7 @@ namespace Render
 
                 var gbuffer0 = renderGraph.ImportTexture(GBuffer0);
                 var gbuffer1 = renderGraph.ImportTexture(GBuffer1);
+                var lighting = renderGraph.ImportTexture(LightBuffer);
                 var zbuffer  = renderGraph.ImportTexture(ZBuffer);
                 
                 // GBuffer Pass
@@ -178,6 +179,7 @@ namespace Render
                 {
                     passData.output     = builder.UseColorBuffer(gbuffer0, 0);
                     passData.gbuffer1   = builder.UseColorBuffer(gbuffer1, 1);
+                    passData.lighting   = builder.UseColorBuffer(lighting, 2);
                     builder.UseDepthBuffer(zbuffer, DepthAccess.ReadWrite);
                     
                     builder.SetRenderFunc(
@@ -207,12 +209,10 @@ namespace Render
                 }*/
             }
 
-
-            cmd.Blit(GBuffer0, LightBuffer);
             cmd.SetRenderTarget(LightBuffer);
 
             // Draw Directional Lights
-            CoreUtils.DrawFullScreen(cmd, DirectionalLight);
+            CoreUtils.DrawFullScreen(cmd, DeferredShading);
 
             cmd.SetRenderTarget(LightBuffer, ZBuffer);
 
