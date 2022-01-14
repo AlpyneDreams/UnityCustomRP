@@ -29,7 +29,6 @@ namespace Render
         RTHandle GBuffer0, GBuffer1, ZBuffer, LightBuffer;
 
         public Material DeferredShading = new Material(Shader.Find("Hidden/Custom/DeferredShading"));
-        public Material PointLight      = new Material(Shader.Find("Hidden/Custom/PointLight"));
 
         Lighting lighting = new Lighting();
         DeferredLights lights = new DeferredLights();
@@ -51,14 +50,14 @@ namespace Render
             LightBuffer = RTHandles.Alloc(Vector2.one, name: "LightBuffer", dimension: TextureDimension.Tex2D, colorFormat: GraphicsFormat.R32G32B32A32_SFloat);
 
             InitFullscreenMaterial(DeferredShading);
-            InitFullscreenMaterial(PointLight);
 
-            //Debug.Log("GBuffer0: " + GBuffer0.rt.format);
+            lighting.Init(this);
+            lights.Init(this);
 
             InitEditor();
         }
 
-        void InitFullscreenMaterial(Material material)
+        public void InitFullscreenMaterial(Material material)
         {
             material.SetTexture("_GBuffer0", GBuffer0);
             material.SetTexture("_GBuffer1", GBuffer1);
@@ -95,7 +94,7 @@ namespace Render
                 context.ExecuteAndClear(cmd);
 
                 // Update Lighting Parameters
-                lighting.Setup(this, context);
+                lighting.Setup(context);
 
                 // Render Shadowmaps
                 lighting.shadows.Render();
@@ -160,7 +159,7 @@ namespace Render
 
         void RenderDeferred(RenderContext context, CommandBuffer cmd)
         {
-            lights.Setup(this, context);
+            lights.Setup(context);
 
             var renderGraphParams = new RenderGraphParameters()
             {

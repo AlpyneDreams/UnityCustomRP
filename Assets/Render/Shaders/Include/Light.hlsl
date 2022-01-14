@@ -18,6 +18,44 @@ struct Light {
     float  attenuation;
 };
 
+
+// Inverse Square Law, with a maximum range.
+float RangeAttenuation(float3 ray, float invRangeSquared)
+{
+    float distSq = max(dot(ray, ray), 0.00001);
+    return square(saturate(1 - square(distSq * invRangeSquared))) / distSq;
+}
+
+// Get light direction and attenuation
+Light GetLight(Surface surface, float3 lightColor, float3 lightPos, float invRangeSquared)
+{
+    float3 ray        = lightPos - surface.position;
+    float3 lightDir   = normalize(ray);
+
+    Light light;
+    light.color       = lightColor;
+    light.direction   = lightDir;
+    light.attenuation = RangeAttenuation(ray, invRangeSquared);
+
+    return light;
+}
+
+// Spot light cone attenuation, with inner and outer angles.
+float SpotAttenuation(float3 spotDir, float3 lightDir, float invSpotAngleDiff, float minusCosHalfOuter)
+{
+    float SdotL = dot(spotDir, lightDir);
+
+    // Formula:
+    //    square(saturate( (SdotL - cos(outer/2)) / (cos(inner/2) - cos(outer/2)) ))
+
+    // minusCosHalfOuter = -cos(outer/2) 
+    // invSpotAngleDiff  = 1 / (cos(inner/2) - cos(outer/2))
+
+    return square(saturate(
+        (SdotL + minusCosHalfOuter) * invSpotAngleDiff
+    ));
+}
+
 uint GetDirectionalLightCount() {
     return _DirectionalLightCount;
 }

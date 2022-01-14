@@ -30,6 +30,12 @@ namespace Render
             context.ExecuteAndClear(cmd);
         }
 
+        public void Init(CustomRenderPipeline pipeline)
+        {
+            this.pipeline = pipeline;
+            Init();
+        }
+
         public void Setup(RenderPass parent)
         {
             this.pipeline = parent.pipeline;
@@ -40,9 +46,12 @@ namespace Render
             Setup();
         }
 
-        public void Setup(CustomRenderPipeline pipeline, RenderContext context)
+        public void Setup(RenderContext context)
         {
-            this.pipeline = pipeline;
+            if (this.pipeline == null) {
+                Debug.LogWarning("RenderPass.Setup called before RenderPass.Init!");
+                return;
+            }
             this.settings = pipeline.settings;
             this.context = context;
             this.cullingResults = pipeline.cullingResults;
@@ -56,6 +65,7 @@ namespace Render
             Render();
         }
 
+        protected virtual void Init() {}
         protected virtual void Setup() {}
         public virtual void Render() {}
         public virtual void Cleanup() {}

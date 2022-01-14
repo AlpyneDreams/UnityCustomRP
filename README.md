@@ -22,3 +22,4 @@
 - [Premultiplied Alpha](https://catlikecoding.com/unity/tutorials/custom-srp/directional-lights/#4) 
 - GBuffers should be size of target backbuffer, not size of monitor
 - Indirect reflections are too prominent in the dark
+- Spotlight inner angle inspector GUI
