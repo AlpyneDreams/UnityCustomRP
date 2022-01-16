@@ -61,3 +61,15 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+### Custom ###
+
+.vscode/
+.vsconfig
+/[Uu]serSettings/
+UpgradeLog*.htm
+
+# Test Assets
+/[Aa]ssets/Test
+/[Aa]ssets/Test.meta
+/[Aa]ssets/Scenes
+/[Aa]ssets/Scenes.meta
