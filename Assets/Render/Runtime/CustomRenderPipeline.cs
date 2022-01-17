@@ -99,9 +99,6 @@ namespace Render
                 // Render Shadowmaps
                 lighting.shadows.Render();
 
-                cmd.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
-                cmd.ClearRenderTarget(camera.clearFlags, camera.backgroundColor);
-                
                 cmd.EndSample(camera.name);
                 context.ExecuteAndClear(cmd);
 
@@ -141,6 +138,10 @@ namespace Render
 
         void RenderForward(RenderContext context, CommandBuffer cmd)
         {
+            // Bind and clear main render target
+            cmd.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
+            cmd.ClearRenderTarget(camera.clearFlags, camera.backgroundColor);
+
             cmd.BeginSample(camera.name);
             context.ExecuteAndClear(cmd);
 
@@ -189,7 +190,8 @@ namespace Render
                     builder.SetRenderFunc(
                     (PassData data, RenderGraphContext ctx) => 
                     {
-                        ctx.cmd.ClearRenderTarget(true, true, Color.clear);
+                        // Clear the GBuffers
+                        ctx.cmd.ClearRenderTarget(camera.clearFlags, camera.backgroundColor);
                         ctx.renderContext.ExecuteAndClear(ctx.cmd);
 
                         DrawOpaque(ctx.renderContext, TagDeferred);
@@ -278,6 +280,8 @@ namespace Render
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
+
+            lighting.Dispose();
 
             GBuffer0.Release();
             GBuffer1.Release();

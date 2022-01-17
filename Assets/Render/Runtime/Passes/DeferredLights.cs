@@ -6,7 +6,6 @@ using Unity.Collections;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Experimental.Rendering.RenderGraphModule;
 
-
 using RenderContext = UnityEngine.Rendering.ScriptableRenderContext;
 
 namespace Render
@@ -43,24 +42,19 @@ namespace Render
         {
             cmd.BeginSample("DeferredLights");
 
-            // Corresponds to shadowLightCount in Lighting.cs
-            int shadowLightCount = 0;
+            int lightDataIndex = 0;
 
             foreach (var light in cullingResults.visibleLights)
             {
+                if (light.lightType != LightType.Spot && light.lightType != LightType.Point) {
+                    continue;
+                }
+
                 MaterialPropertyBlock block = new MaterialPropertyBlock();
 
-                // _LightColor
-                Vector4 lightColor = light.finalColor;
-                lightColor.w = 1f / Mathf.Max(light.range * light.range, 0.00001f);
-                block.SetColor(ID_LightColor, lightColor);
+                Lighting.LightData data = pipeline.lighting.lights[lightDataIndex++];
 
-                int shadowIndex = -1;
-                if (light.lightType == LightType.Spot || light.lightType == LightType.Point) {
-                    if (Shadows.ShouldCastShadows(light.light)) {
-                        shadowIndex = shadowLightCount++;
-                    }
-                }
+                block.SetVector(ID_LightColor, (Vector4)data.color);
                 
                 switch (light.lightType)
                 {
@@ -69,24 +63,14 @@ namespace Render
                         Matrix4x4 transform = light.localToWorldMatrix;
                         transform *= Matrix4x4.Scale(new Vector3(light.range, light.range, light.range));
 
-                        // _LightData
-                        float cosInner = Mathf.Cos(Mathf.Deg2Rad * light.light.innerSpotAngle * 0.5f);
-                        float cosOuter = Mathf.Cos(Mathf.Deg2Rad * light.spotAngle * 0.5f);
-                        float invAngleDiff = 1 / Mathf.Max(cosInner - cosOuter, 0.001f);
-                        Vector4 spotData = new Vector4(invAngleDiff, -cosOuter);
-                        if (shadowIndex >= 0) {
-                            // Shadow strength, atlas tile index
-                            spotData.z = pipeline.lighting.lightShadowData[shadowIndex].x;
-                            spotData.w = pipeline.lighting.lightShadowData[shadowIndex].y;
-                        }
-                        block.SetVector(ID_LightData, spotData);
+                        block.SetVector(ID_LightData, data.spotData);
                         
                         cmd.DrawMesh(HemisphereMesh, transform, LightMaterial, 0, SpotLightPass, block);
                         break;
                     }
                     case LightType.Point:
                     {
-                        Vector3 pos = light.localToWorldMatrix.GetColumn(3);
+                        Vector3 pos = data.position;
                         Matrix4x4 transform = new Matrix4x4(
                             new Vector4(light.range, 0.0f, 0.0f, 0.0f),
                             new Vector4(0.0f, light.range, 0.0f, 0.0f),

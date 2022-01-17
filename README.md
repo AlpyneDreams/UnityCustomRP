@@ -13,6 +13,9 @@
     - Clamped Sampling: Is it even necessary with attenuation?
 - Point Light Shadows
 
+### Forward
+- Don't draw every light for every fragment!
+
 ### Deferred
 - Emission
 - Lights

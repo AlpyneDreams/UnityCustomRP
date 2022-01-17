@@ -38,7 +38,7 @@ Shader "Hidden/Custom/DeferredShading"
                 GBuffer gbuf = SampleGBuffers(i.uv, _GBuffer0, _GBuffer1, _ZBuffer);
                 Surface surface = UnpackGBuffer(gbuf);
 
-                return float4(Lighting(surface), 1);
+                return float4(DirectionalLights(surface), 1);
             }
 
             ENDHLSL

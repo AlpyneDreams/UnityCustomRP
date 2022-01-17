@@ -2,7 +2,7 @@
 
 #define MAX_DIRECTIONAL_LIGHTS 4
 
-cbuffer _Lights
+cbuffer _LightData
 {
     uint    _DirectionalLightCount;
     float4  _DirectionalLightColors[MAX_DIRECTIONAL_LIGHTS];
