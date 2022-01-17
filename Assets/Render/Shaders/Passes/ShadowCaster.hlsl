@@ -32,6 +32,8 @@ struct Varyings {
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
+bool _ShadowPancaking;
+
 Varyings vertShadowCaster(Attributes i)
 {
     Varyings o;
@@ -41,12 +43,14 @@ Varyings vertShadowCaster(Attributes i)
     float3 worldPos = TransformObjectToWorld(i.position);
     o.position = TransformWorldToHClip(worldPos);
 
-    // Avoid shadow pancaking
-    #if UNITY_REVERSED_Z
-		o.position.z = min(o.position.z, o.position.w * UNITY_NEAR_CLIP_VALUE);
-	#else
-		o.position.z = max(o.position.z, o.position.w * UNITY_NEAR_CLIP_VALUE);
-	#endif
+    if (_ShadowPancaking) {
+        // Avoid shadow pancaking
+        #if UNITY_REVERSED_Z
+            o.position.z = min(o.position.z, o.position.w * UNITY_NEAR_CLIP_VALUE);
+        #else
+            o.position.z = max(o.position.z, o.position.w * UNITY_NEAR_CLIP_VALUE);
+        #endif
+    }
 
 
     float4 albedoTf = INPUT_PROP(_MainTex_ST);

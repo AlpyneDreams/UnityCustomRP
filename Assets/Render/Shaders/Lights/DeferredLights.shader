@@ -16,6 +16,7 @@ Shader "Hidden/Custom/DeferredLights"
         HLSLINCLUDE
         #include "../Include/InputModel.hlsl"
         #include "../Include/GBuffer.hlsl"
+        #include "../Include/Light.hlsl"
         #include "../Include/Lighting.hlsl"
 
         // TODO: Are we correctly sampling these?
@@ -84,7 +85,7 @@ Shader "Hidden/Custom/DeferredLights"
             HLSLPROGRAM
             #pragma fragment frag
 
-            // x: 1/(cos(inner/2) - cos(outer/2)), y: -cos(outer/2)
+            // x: 1/(cos(inner/2) - cos(outer/2)), y: -cos(outer/2), z: shadow strength, w: shadow tile index
             float4 _LightData;
 
             float4 frag(Varyings i) : SV_Target
@@ -102,6 +103,13 @@ Shader "Hidden/Custom/DeferredLights"
                     discard;
 
                 light.attenuation *= spotAtten;
+
+                LocalShadowData data;
+                data.strength       = _LightData.z;
+                data.tileIndex      = _LightData.w;
+                data.lightPosition  = _LightPosition.xyz;
+                data.spotDirection  = light.direction;
+                light.attenuation  *= GetShadowAtten(data, GetShadowData(surface), surface);
                 
                 return float4(DirectLight(surface, brdf, light), 1);
             }

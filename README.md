@@ -9,6 +9,9 @@
     - On, Clip, Dither, Off
 - Receive Shadows Toggle
 - Debug Visualize Cascades
+- Spot Light Shadows
+    - Clamped Sampling: Is it even necessary with attenuation?
+- Point Light Shadows
 
 ### Deferred
 - Emission

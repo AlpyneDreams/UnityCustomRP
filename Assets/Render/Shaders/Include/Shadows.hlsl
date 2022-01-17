@@ -3,8 +3,10 @@
 // Most of this implementation is from https://catlikecoding.com/unity/tutorials/custom-srp/directional-shadows
 
 #pragma multi_compile _ SHADOW_DIRECTIONAL_PCF3 SHADOW_DIRECTIONAL_PCF5 SHADOW_DIRECTIONAL_PCF7
+#pragma multi_compile _ SHADOW_PCF3 SHADOW_PCF5 SHADOW_PCF7
 
 // Should match Shadows.cs
+#define MAX_SHADOWED_LIGHTS 16
 #define MAX_SHADOWED_DIRECTIONAL_LIGHTS 4
 #define MAX_SHADOW_CASCADES 4
 
@@ -23,6 +25,19 @@
 	#define SHADOW_DIRECTIONAL_FILTER_SETUP     SampleShadow_ComputeSamples_Tent_7x7
 #endif
 
+#if defined(SHADOW_PCF3)
+    #define SHADOW_FILTER_SAMPLES   4
+    #define SHADOW_FILTER_SETUP     SampleShadow_ComputeSamples_Tent_3x3
+#elif defined(SHADOW_PCF5)
+	#define SHADOW_FILTER_SAMPLES   9
+	#define SHADOW_FILTER_SETUP     SampleShadow_ComputeSamples_Tent_5x5
+#elif defined(SHADOW_PCF7)
+	#define SHADOW_FILTER_SAMPLES   16
+	#define SHADOW_FILTER_SETUP     SampleShadow_ComputeSamples_Tent_7x7
+#endif
+
+
+TEXTURE2D_SHADOW(_ShadowAtlas);
 TEXTURE2D_SHADOW(_DirectionalShadowAtlas);
 #define SHADOW_SAMPLER sampler_linear_clamp_compare
 SAMPLER_CMP(SHADOW_SAMPLER);
@@ -33,6 +48,8 @@ CBUFFER_START(_Shadows)
     float4   _ShadowCascadeCullingSpheres[MAX_SHADOW_CASCADES];
     float4   _ShadowCascadeData[MAX_SHADOW_CASCADES];
 	float4x4 _DirectionalShadowMatrices[MAX_SHADOWED_DIRECTIONAL_LIGHTS * MAX_SHADOW_CASCADES];
+    float4x4 _ShadowMatrices[MAX_SHADOWED_LIGHTS];
+    float4   _ShadowTiles[MAX_SHADOWED_LIGHTS];
     float4   _ShadowAtlasSize; // Atlas size + texel size
     float4   _ShadowDistanceFade; // 1/MaxDistance (x), 1/Fade (y), 1/(1-(1-CascadeFade)^2) (z)
 CBUFFER_END
@@ -53,7 +70,7 @@ ShadowData GetShadowData(Surface surface)
     data.cascadeBlend = 1.0;
     data.strength = FadedShadowStrength(surface.depth, _ShadowDistanceFade.x, _ShadowDistanceFade.y);
 
-    int i; // Check culling sphere for each cascade
+    uint i; // Check culling sphere for each cascade
     for (i = 0; i < _ShadowCascadeCount; i++) {
         float4 sphere = _ShadowCascadeCullingSpheres[i];
         float distSq = DistanceSquared(surface.position, sphere.xyz);
@@ -78,6 +95,67 @@ ShadowData GetShadowData(Surface surface)
     return data;
 }
 
+/// LOCAL LIGHT SHADOWS ///
+
+struct LocalShadowData {
+    float  strength;
+    int    tileIndex;
+    float3 lightPosition;
+    float3 spotDirection;
+};
+
+/*LocalShadowData GetLocalShadowData(uint index)
+{
+    LocalShadowData data;
+	data.strength   = _LightShadowData[index].x;
+    data.tileIndex  = _LightShadowData[index].y;
+    return data;
+}*/
+
+float SampleShadowAtlas(float3 positionSTS) {
+    return SAMPLE_TEXTURE2D_SHADOW(_ShadowAtlas, SHADOW_SAMPLER, positionSTS);
+}
+
+float FilterShadow(float3 positionSTS)
+{
+    #if defined(SHADOW_FILTER_SETUP)
+        float weights[SHADOW_FILTER_SAMPLES];
+        float2 positions[SHADOW_FILTER_SAMPLES];
+        float4 size = _ShadowAtlasSize.wwzz;
+        SHADOW_FILTER_SETUP(size, positionSTS.xy, weights, positions);
+        float shadow = 0;
+        for (int i = 0; i < SHADOW_FILTER_SAMPLES; i++) {
+            shadow += weights[i] * SampleShadowAtlas(
+                float3(positions[i].xy, positionSTS.z)
+            );
+        }
+        return shadow;
+    #else
+        return SampleShadowAtlas(positionSTS);
+    #endif
+}
+
+float GetShadowAtten(LocalShadowData data, ShadowData global, Surface surface)
+{
+    float4 tileData = _ShadowTiles[data.tileIndex];
+    float3 normalBias  = surface.normal * tileData.w;
+
+    // Scale normal bias with distance from the light plane
+    float3 surfaceToLight = data.lightPosition - surface.position;
+    float distanceToLightPlane = dot(surfaceToLight, data.spotDirection);
+    normalBias *= distanceToLightPlane;
+
+    float4 positionSTS = mul(
+        _ShadowMatrices[data.tileIndex],
+        float4(surface.position + normalBias, 1)
+    );
+
+    float shadow = FilterShadow(positionSTS.xyz / positionSTS.w);
+    return lerp(1, shadow, data.strength);
+}
+
+/// DIRECTIONAL LIGHT SHADOWS ///
+
 struct DirectionalShadowData {
     float strength;
     int tileIndex;
@@ -93,8 +171,7 @@ DirectionalShadowData GetDirectionalShadowData(uint index, ShadowData shadowData
 	return data;
 }
 
-float SampleDirectionalShadowAtlas(float3 positionSTS)
-{
+float SampleDirectionalShadowAtlas(float3 positionSTS) {
     return SAMPLE_TEXTURE2D_SHADOW(_DirectionalShadowAtlas, SHADOW_SAMPLER, positionSTS);
 }
 

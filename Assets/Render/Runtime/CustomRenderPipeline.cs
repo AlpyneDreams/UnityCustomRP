@@ -30,8 +30,8 @@ namespace Render
 
         public Material DeferredShading = new Material(Shader.Find("Hidden/Custom/DeferredShading"));
 
-        Lighting lighting = new Lighting();
-        DeferredLights lights = new DeferredLights();
+        internal Lighting lighting = new Lighting();
+        internal DeferredLights lights = new DeferredLights();
 
         public CustomRenderPipeline(CustomRenderPipelineAsset asset)
         {

@@ -43,6 +43,9 @@ namespace Render
         {
             cmd.BeginSample("DeferredLights");
 
+            // Corresponds to shadowLightCount in Lighting.cs
+            int shadowLightCount = 0;
+
             foreach (var light in cullingResults.visibleLights)
             {
                 MaterialPropertyBlock block = new MaterialPropertyBlock();
@@ -51,6 +54,13 @@ namespace Render
                 Vector4 lightColor = light.finalColor;
                 lightColor.w = 1f / Mathf.Max(light.range * light.range, 0.00001f);
                 block.SetColor(ID_LightColor, lightColor);
+
+                int shadowIndex = -1;
+                if (light.lightType == LightType.Spot || light.lightType == LightType.Point) {
+                    if (Shadows.ShouldCastShadows(light.light)) {
+                        shadowIndex = shadowLightCount++;
+                    }
+                }
                 
                 switch (light.lightType)
                 {
@@ -64,6 +74,11 @@ namespace Render
                         float cosOuter = Mathf.Cos(Mathf.Deg2Rad * light.spotAngle * 0.5f);
                         float invAngleDiff = 1 / Mathf.Max(cosInner - cosOuter, 0.001f);
                         Vector4 spotData = new Vector4(invAngleDiff, -cosOuter);
+                        if (shadowIndex >= 0) {
+                            // Shadow strength, atlas tile index
+                            spotData.z = pipeline.lighting.lightShadowData[shadowIndex].x;
+                            spotData.w = pipeline.lighting.lightShadowData[shadowIndex].y;
+                        }
                         block.SetVector(ID_LightData, spotData);
                         
                         cmd.DrawMesh(HemisphereMesh, transform, LightMaterial, 0, SpotLightPass, block);

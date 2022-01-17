@@ -18,6 +18,9 @@ MonoBehaviour:
   shadows:
     maxDistance: 100
     distanceFade: 0.1
+    general:
+      atlasSize: 2048
+      filter: 4
     directional:
       atlasSize: 2048
       filter: 4

@@ -26,33 +26,47 @@ namespace Render
             dirLightColors      = new Vector4[MAX_DIRECTIONAL_LIGHTS],
             dirLightDirections  = new Vector4[MAX_DIRECTIONAL_LIGHTS],
             dirLightShadowData  = new Vector4[MAX_DIRECTIONAL_LIGHTS];
+
+        public Vector4[] lightShadowData = new Vector4[Shadows.MAX_SHADOWED_LIGHTS];
         
         protected override void Setup()
         {
             shadows.Setup(this);
 
-            uint dirLightCount = 0;
-            int lightIndex = 0;
+            uint dirLightCount = 0, shadowLightCount = 0;;
 
-            var visibleLights = cullingResults.visibleLights;
-            foreach (var light in visibleLights)
+            foreach (var (lightIndex, light) in cullingResults.visibleLights.Entries())
             {
-                if (light.lightType == LightType.Directional)
+                switch (light.lightType)
                 {
-                    if (dirLightCount >= MAX_DIRECTIONAL_LIGHTS)
+                    case LightType.Directional:
+                    {
+                        if (dirLightCount >= MAX_DIRECTIONAL_LIGHTS)
+                            continue;
+
+                        uint index = dirLightCount++;
+
+                        Vector3 shadowData = shadows.ReserveDirectionalShadows(light.light, lightIndex);
+
+                        dirLightColors[index]       = light.finalColor;
+                        dirLightDirections[index]   = -light.localToWorldMatrix.GetColumn(2);
+                        dirLightShadowData[index]   = shadowData;
                         break;
+                    }
+                    case LightType.Spot:
+                    case LightType.Point:
+                    {
+                        // NOTE: Using index based on number of shadow lights rather than total number of lights
+                        // since deferred handles non-shadowed lights by itself.
+                        if (!Shadows.ShouldCastShadows(light.light)) {
+                            continue;
+                        }
 
-                    uint index = dirLightCount;
-
-                    Vector3 shadowData = shadows.ReserveDirectionalShadows(light.light, lightIndex);
-
-                    dirLightColors[index]       = light.finalColor;
-                    dirLightDirections[index]   = -light.localToWorldMatrix.GetColumn(2);
-                    dirLightShadowData[index]   = shadowData;
-                    dirLightCount++;
+                        uint index = shadowLightCount++;
+                        lightShadowData[index] = shadows.ReserveShadows(light.light, lightIndex);
+                        break;
+                    }
                 }
-
-                lightIndex++;
             }
 
             cmd.SetGlobalInt(ID_DirLightCount, unchecked((int)dirLightCount));
